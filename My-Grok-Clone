@@ -1,0 +1,32 @@
+from fastapi import FastAPI, Request, HTTPException
+from pydantic import BaseModel
+import os
+
+app = FastAPI()
+
+# Put your exact access key here (same as in Poe)
+ACCESS_KEY = "sk-9k3mx7p2q8v4b6n1r5t9y0u2w4e6r8t0"
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+class PoeRequest(BaseModel):
+    messages: list[Message]
+
+@app.post("/")
+async def handle_request(request: Request):
+    if request.headers.get("X-Poe-Access-Key") != ACCESS_KEY:
+        raise HTTPException(status_code=401, detail="Invalid access key")
+
+    payload = await request.json()
+    user_message = payload["messages"][-1]["content"]
+
+    # Replace this with whatever model you want (OpenAI, Grok, Claude, local LLM, etc.)
+    response_text = f"Echo: {user_message}"  # dummy echo for testing
+
+    return {
+        "replies": [
+            {"role": "bot", "content": response_text}
+        ]
+    }
